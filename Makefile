@@ -1,20 +1,21 @@
-TARGET       := prog1
 PYOCD_TARGET := --target STM32G474RETx
 CROSS        := arm-none-eabi-
 CC           := $(CROSS)gcc
 LD           := $(CROSS)ld
-LDFLAGS      := -g -Ttext=0x8000000
+LDFLAGS      := -g -T stm32g474re.ld
 ASFLAGS      := -g
+OBJS         := vector_table.o
 
-$(TARGET).elf: $(TARGET).o
-	$(LD) $(LDFLAGS) $< -o $@
+blinky.elf:
+
+%.elf: %.o $(OBJS)
+	$(LD) $(LDFLAGS) $^ -o $*.elf
 
 .PHONY: gdbserver
 gdbserver:
 	pyocd gdbserver $(PYOCD_TARGET)
 
-.PHONY: flash
-flash: $(TARGET).elf
+flash-%: %.elf
 	pyocd flash $(PYOCD_TARGET) $<
 
 .PHONY: erase
@@ -23,8 +24,8 @@ erase:
 
 .PHONY: clean
 clean:
-	$(RM) $(TARGET).{o,elf}
+	$(RM) *.elf *.o
 
 .PHONY: dump
-dump: $(TARGET).elf
+dump-%: %.elf
 	$(CROSS)objdump -D $<
