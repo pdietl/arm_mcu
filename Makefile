@@ -3,7 +3,7 @@ CROSS        := arm-none-eabi-
 CC           := $(CROSS)gcc
 LD           := $(CROSS)ld
 LDFLAGS      := -g -T stm32g474re.ld
-ASFLAGS      := -g
+ASFLAGS      := -g -Iinc
 OBJS         := vector_table.o
 
 blinky.elf:

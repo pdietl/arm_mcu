@@ -2,24 +2,7 @@
 .cpu cortex-m3
 .thumb
 
-RCC_BASE = 0x40021000
-RCC_AHB2ENR = RCC_BASE + 0x4c
-RCC_AHB2ENR_GPIOPAEN = 1
-
-GPIOA_BASE = 0x48000000
-GPIOA_MODER = GPIOA_BASE
-GPIOX_MODER_PIN5_SHIFT = 5 * 2
-GPIOX_MODER_PIN5_OUTPUT = 0b01 << GPIOX_MODER_PIN5_SHIFT
-GPIOX_MODER_PIN5_MASK = ~(0b11 << GPIOX_MODER_PIN5_SHIFT)
-GPIOA_BSRR = GPIOA_BASE + 0x18 // bit reset
-GPIOx_BSRR_BS5 = 1 << 5
-GPIOx_BSRR_BR5 = (1 << 5) << 16
-
-SCS = 0xe000e000
-SCS_SYST_CSR = 0x10
-SCS_SYST_RVR = 0x14
-SCS_SYST_CVR = 0x18
-TimerValue=1500000
+#include "stm32g474xx_asm.h"
 
 .text
 .type Reset_Handler, %function
@@ -36,11 +19,11 @@ loop:
 .type Blink, %function
 Blink:
 	push { r4-r8, lr }
-	ldr r4, =GPIOA_BSRR				// Load address of GPIOA_BSRR
-	ldr r5, =GPIOx_BSRR_BS5			// Register value to set pin to high
-	ldr r6, =GPIOx_BSRR_BR5			// Register value to set pin to low
-	adr r7, BlinkTable				// Move address of "BlinkTable" into r8
-	adr r8, BlinkTableEnd			// Move address of "BlinkTableEnd" into r9
+	ldr r4, =GPIOA_BASE	+ GPIOx_REG_BSRR    // Load address of GPIOA_BSRR
+	ldr r5, =GPIO_BSRR_BS5	// Register value to set pin to high
+	ldr r6, =GPIO_BSRR_BR5	// Register value to set pin to low
+	adr r7, BlinkTable		// Move address of "BlinkTable" into r8
+	adr r8, BlinkTableEnd	// Move address of "BlinkTableEnd" into r9
 
 
 	BlinkLoop:
@@ -70,18 +53,18 @@ BlinkTableEnd:
 
 .type EnableClockGPIOA, %function
 EnableClockGPIOA:
-	ldr r1, =RCC_AHB2ENR
+	ldr r1, =RCC_REG_AHB2ENR
 	ldr r0, [r1]
-	orr r0, r0, RCC_AHB2ENR_GPIOPAEN
-	str r0, [r1]					// Set IOPAEN bit in RCC_AHB2ENR to 1 to enable GPIOA
+	orr r0, r0, RCC_AHB2ENR_GPIOAEN
+	str r0, [r1]    // Set IOPAEN bit in RCC_AHB2ENR to 1 to enable GPIOA
 	bx lr
 
 .type ConfigurePA5, %function
 ConfigurePA5:
-	ldr r1, =GPIOA_MODER
+	ldr r1, =GPIOA_BASE + GPIOx_REG_MODER
 	ldr r0, [r1]
-	and r0, GPIOX_MODER_PIN5_MASK
-	orr r0, GPIOX_MODER_PIN5_OUTPUT
+	and r0, ~GPIO_MODER_MODE5
+	orr r0, GPIO_MODER_MODE5_0
 	str r0, [r1]
 	bx lr
 	.ltorg
@@ -89,6 +72,7 @@ ConfigurePA5:
 // r0 = Count-Down value for timer
 .type StartSysTick, %function
 StartSysTick:
+/*
 	ldr r1, =SCS
 
 	str r0, [r1, #SCS_SYST_RVR]
@@ -97,12 +81,13 @@ StartSysTick:
 
 	ldr r0, =5
 	str r0, [r1, #SCS_SYST_CSR]
-
+*/
 	bx lr
 
 // r0 = Number of timer events to wait for
 .type WaitSysTick, %function
 WaitSysTick:
+/*
 	ldr r1,	 =SCS
 
 WaitSysTickLoop:
@@ -112,5 +97,5 @@ WaitSysTickLoop:
 
 	subs r0, #1
 	bne WaitSysTickLoop
-
+*/
 	bx lr
